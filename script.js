@@ -116,7 +116,7 @@ document.getElementById('btnResetar').addEventListener('click', () => {
   }
 });
 
-// === GERENCIAMENTO DE LOTES ===
+// === GERENCIAMENTO DE LOTES (com formatação monetária) ===
 function gerenciarLotes(id) {
   const evento = eventos.find(e => e.id === id);
   if (!evento) return;
@@ -127,20 +127,33 @@ function gerenciarLotes(id) {
   const setoresArray = setores.split(',').map(s => s.trim()).slice(0, 5);
   const lote = { setores: [] };
 
+  // Função interna para formatar valores como moeda
+  const formatarMoeda = (valor) => {
+    if (!valor) return "R$ 0,00";
+    valor = valor.toString().replace(/[^\d,.-]/g, '').replace(',', '.');
+    const numero = parseFloat(valor) || 0;
+    return numero.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  };
+
   setoresArray.forEach(setor => {
-    const meia = prompt(`Valor MEIA do setor "${setor}"`);
-    const solidario = prompt(`Valor SOLIDÁRIO do setor "${setor}"`);
-    const inteira = prompt(`Valor INTEIRA do setor "${setor}"`);
+    let meia, solidario, inteira;
+    do { meia = prompt(`Valor MEIA do setor "${setor}" (ex: 50,00):`); } while (!meia);
+    do { solidario = prompt(`Valor SOLIDÁRIO do setor "${setor}" (ex: 60,00):`); } while (!solidario);
+    do { inteira = prompt(`Valor INTEIRA do setor "${setor}" (ex: 100,00):`); } while (!inteira);
 
     lote.setores.push({
       setor,
-      valores: { meia, solidario, inteira }
+      valores: {
+        meia: formatarMoeda(meia),
+        solidario: formatarMoeda(solidario),
+        inteira: formatarMoeda(inteira)
+      }
     });
   });
 
   evento.lotes.push(lote);
   salvarLocal();
-  alert('Lote salvo com sucesso!');
+  alert('💾 Lote salvo com sucesso!');
 }
 
 // === VISUALIZAR LOTES ===
@@ -168,9 +181,9 @@ function visualizarLotes(id) {
       setoresHTML += `
         <div class="setor-item">
           <h4>${s.setor}</h4>
-          <p><b>Meia:</b> R$ ${s.valores.meia || '-'}</p>
-          <p><b>Solidário:</b> R$ ${s.valores.solidario || '-'}</p>
-          <p><b>Inteira:</b> R$ ${s.valores.inteira || '-'}</p>
+          <p><b>Meia:</b> ${s.valores.meia || '-'}</p>
+          <p><b>Solidário:</b> ${s.valores.solidario || '-'}</p>
+          <p><b>Inteira:</b> ${s.valores.inteira || '-'}</p>
         </div>
       `;
     });
@@ -224,7 +237,7 @@ formEditar.addEventListener('submit', (e) => {
   salvarLocal();
   renderEventos();
   modal.style.display = 'none';
-  alert('Evento atualizado com sucesso!');
+  alert('✅ Evento atualizado com sucesso!');
 });
 
 window.addEventListener('click', (e) => {
